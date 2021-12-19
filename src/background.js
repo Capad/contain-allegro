@@ -1,35 +1,19 @@
 /* global psl */
 
-const FACEBOOK_CONTAINER_DETAILS = {
-  name: "Facebook",
+const ALLEGRO_CONTAINER_DETAILS = {
+  name: "Allegro",
   color: "toolbar",
   icon: "fence"
 };
 
-const FACEBOOK_DOMAINS = [
-  "facebook.com", "www.facebook.com", "facebook.net", "fb.com",
-  "fbcdn.net", "fbcdn.com", "fbsbx.com", "tfbnw.net",
-  "facebook-web-clients.appspot.com", "fbcdn-profile-a.akamaihd.net", "fbsbx.com.online-metrix.net", "connect.facebook.net.edgekey.net", "facebookrecruiting.com",
+// "facebook.com", "www.facebook.com", "facebook.net", "fb.com",
+//   "fbcdn.net", "fbcdn.com", "fbsbx.com", "tfbnw.net",
+//   "facebook-web-clients.appspot.com", "fbcdn-profile-a.akamaihd.net", "fbsbx.com.online-metrix.net", "connect.facebook.net.edgekey.net", "facebookrecruiting.com",
 
-  "instagram.com",
-  "cdninstagram.com", "instagramstatic-a.akamaihd.net", "instagramstatic-a.akamaihd.net.edgesuite.net",
-
-  "messenger.com", "m.me", "messengerdevelopers.com", "facebook.messenger.com",
-
-  "atdmt.com",
-
-  "workplace.com", "www.workplace.com", "work.facebook.com",
-
-  "onavo.com",
-  "oculus.com", "oculusvr.com", "oculusbrand.com", "oculusforbusiness.com",
-
-  "mapwith.ai", "wit.ai",
-
-  "oversightboard.com", "www.oversightboard.com",
-  
-  "bulletin.com", "facebookbrand.com",
-
-  "novi.com"
+//   "instagram.com",
+//   "cdninstagram.com", "instagramstatic-a.akamaihd.net", "instagramstatic-a.akamaihd.net.edgesuite.net",
+const ALLEGRO_DOMAINS = [
+  "allegro.pl", "ceneo.pl"
 ];
 
 const DEFAULT_SETTINGS = {
@@ -41,14 +25,14 @@ const RELAY_ADDON_ID = "private-relay@firefox.com";
 
 let macAddonEnabled = false;
 let relayAddonEnabled = false;
-let facebookCookieStoreId = null;
+let allegroCookieStoreId = null;
 
 // TODO: refactor canceledRequests and tabsWaitingToLoad into tabStates
 const canceledRequests = {};
 const tabsWaitingToLoad = {};
 const tabStates = {};
 
-const facebookHostREs = [];
+const allegroHostREs = [];
 
 async function updateSettings(data){
   await browser.storage.local.set({
@@ -57,14 +41,14 @@ async function updateSettings(data){
 }
 
 async function checkSettings(setting){
-  let fbcStorage = await browser.storage.local.get();
+  let gacStorage = await browser.storage.local.get();
 
   if (setting) {
-    return fbcStorage.settings[setting];
+    return gacStorage.settings[setting];
   }
 
-  if (fbcStorage.settings) {
-    return fbcStorage.settings;
+  if (gacStorage.settings) {
+    return gacStorage.settings;
   }
 
   await browser.storage.local.set({
@@ -136,7 +120,7 @@ async function sendJailedDomainsToMAC () {
   try {
     return await browser.runtime.sendMessage(MAC_ADDON_ID, {
       method: "jailedDomains",
-      urls: FACEBOOK_DOMAINS.map((domain) => {
+      urls: ALLEGRO_DOMAINS.map((domain) => {
         return `https://${domain}/`;
       })
     });
@@ -205,14 +189,14 @@ function shouldCancelEarly (tab, options) {
   return false;
 }
 
-function generateFacebookHostREs () {
-  for (let facebookDomain of FACEBOOK_DOMAINS) {
-    facebookHostREs.push(new RegExp(`^(.*\\.)?${facebookDomain}$`));
+function generateAllegroHostREs () {
+  for (let allegroDomain of ALLEGRO_DOMAINS) {
+    allegroHostREs.push(new RegExp(`^(.*\\.)?${allegroDomain}$`));
   }
 }
 
-async function clearFacebookCookies () {
-  // Clear all facebook cookies
+async function clearAllegroCookies () {
+  // Clear all allegro cookies
   const containers = await browser.contextualIdentities.query({});
   containers.push({
     cookieStoreId: "firefox-default"
@@ -220,78 +204,78 @@ async function clearFacebookCookies () {
 
   let macAssignments = [];
   if (macAddonEnabled) {
-    const promises = FACEBOOK_DOMAINS.map(async facebookDomain => {
-      const assigned = await getMACAssignment(`https://${facebookDomain}/`);
-      return assigned ? facebookDomain : null;
+    const promises = ALLEGRO_DOMAINS.map(async allegroDomain => {
+      const assigned = await getMACAssignment(`https://${allegroDomain}/`);
+      return assigned ? allegroDomain : null;
     });
     macAssignments = await Promise.all(promises);
   }
 
-  FACEBOOK_DOMAINS.map(async facebookDomain => {
-    const facebookCookieUrl = `https://${facebookDomain}/`;
+  ALLEGRO_DOMAINS.map(async allegroDomain => {
+    const allegroCookieUrl = `https://${allegroDomain}/`;
 
-    // dont clear cookies for facebookDomain if mac assigned (with or without www.)
+    // dont clear cookies for allegroDomain if mac assigned (with or without www.)
     if (macAddonEnabled &&
-        (macAssignments.includes(facebookDomain) ||
-         macAssignments.includes(`www.${facebookDomain}`))) {
+      (macAssignments.includes(allegroDomain) ||
+      macAssignments.includes(`www.${allegroDomain}`))) {
       return;
     }
 
     containers.map(async container => {
       const storeId = container.cookieStoreId;
-      if (storeId === facebookCookieStoreId) {
-        // Don't clear cookies in the Facebook Container
+      if (storeId === allegroCookieStoreId) {
+        // Don't clear cookies in the Allegro Container
         return;
       }
 
       const cookies = await browser.cookies.getAll({
-        domain: facebookDomain,
+        domain: allegroDomain,
         storeId
       });
 
       cookies.map(cookie => {
         browser.cookies.remove({
           name: cookie.name,
-          url: facebookCookieUrl,
+          url: allegroCookieUrl,
           storeId
         });
       });
       // Also clear Service Workers as it breaks detecting onBeforeRequest
-      await browser.browsingData.remove({hostnames: [facebookDomain]}, {serviceWorkers: true});
+      await browser.browsingData.remove({ hostnames: [allegroDomain]}, {serviceWorkers: true});
     });
   });
 }
 
 async function setupContainer () {
-  // Use existing Facebook container, or create one
+  // Use existing Allegro container, or create one
 
   const info = await browser.runtime.getBrowserInfo();
   if (parseInt(info.version) < 67) {
-    FACEBOOK_CONTAINER_DETAILS.color = "blue";
-    FACEBOOK_CONTAINER_DETAILS.icon = "briefcase";
+    ALLEGRO_CONTAINER_DETAILS.color = "blue";
+    ALLEGRO_CONTAINER_DETAILS.icon = "briefcase";
   }
 
-  const contexts = await browser.contextualIdentities.query({name: FACEBOOK_CONTAINER_DETAILS.name});
+  const contexts = await browser.contextualIdentities.query({name: ALLEGRO_CONTAINER_DETAILS.name});
   if (contexts.length > 0) {
-    const facebookContext = contexts[0];
-    facebookCookieStoreId = facebookContext.cookieStoreId;
-    // Make existing Facebook container the "fence" icon if needed
-    if (facebookContext.color !== FACEBOOK_CONTAINER_DETAILS.color ||
-        facebookContext.icon !== FACEBOOK_CONTAINER_DETAILS.icon
+    const allegroContext = contexts[0];
+    allegroCookieStoreId = allegroContext.cookieStoreId;
+    // Make existing Allegro container the "fence" icon if needed
+    if (allegroContext.color !== ALLEGRO_CONTAINER_DETAILS.color ||
+        allegroContext.icon !== ALLEGRO_CONTAINER_DETAILS.icon
     ) {
       await browser.contextualIdentities.update(
-        facebookCookieStoreId,
-        { color: FACEBOOK_CONTAINER_DETAILS.color, icon: FACEBOOK_CONTAINER_DETAILS.icon }
+        allegroCookieStoreId,
+        { color: ALLEGRO_CONTAINER_DETAILS.color, icon: ALLEGRO_CONTAINER_DETAILS.icon }
       );
     }
   } else {
-    const context = await browser.contextualIdentities.create(FACEBOOK_CONTAINER_DETAILS);
-    facebookCookieStoreId = context.cookieStoreId;
+    const context = await browser.contextualIdentities.create(ALLEGRO_CONTAINER_DETAILS);
+    allegroCookieStoreId = context.cookieStoreId;
   }
-  // Initialize domainsAddedToFacebookContainer if needed
-  const fbcStorage = await browser.storage.local.get();
-  if (!fbcStorage.domainsAddedToFacebookContainer) {
-    await browser.storage.local.set({"domainsAddedToFacebookContainer": []});
+  // Initialize domainsAddedToAllegroContainer if needed
+  const gacStorage = await browser.storage.local.get();
+  if (!gacStorage.domainsAddedToAllegroContainer) {
+    await browser.storage.local.set({"domainsAddedToAllegroContainer": []});
   }
 }
 
@@ -345,27 +329,27 @@ function getRootDomain(url) {
 
 }
 
-function topFrameUrlIsFacebookApps(frameAncestorsArray) {
+function topFrameUrlIsAllegroApps(frameAncestorsArray) {
   if (!frameAncestorsArray || frameAncestorsArray.length === 0) {
     // No frame ancestor return false
     return false;
   }
 
-  const appsFacebookURL = "https://apps.facebook.com";
+  const appsAllegroURL = "https://apps.allegro.pl";
   const frameAncestorsURL = frameAncestorsArray[0].url;
 
-  if (!frameAncestorsURL.startsWith(appsFacebookURL)) {
-    // Only allow frame ancestors that originate from apps.facebook.com
+  if (!frameAncestorsURL.startsWith(appsAllegroURL)) {
+    // Only allow frame ancestors that originate from apps.allegro.pl
     return false;
   }
 
   return frameAncestorsURL;
 }
 
-function isFacebookURL (url) {
+function isAllegroURL (url) {
   const parsedUrl = new URL(url);
-  for (let facebookHostRE of facebookHostREs) {
-    if (facebookHostRE.test(parsedUrl.host)) {
+  for (let allegroHostRE of allegroHostREs) {
+    if (allegroHostRE.test(parsedUrl.host)) {
       return true;
     }
   }
@@ -373,25 +357,25 @@ function isFacebookURL (url) {
 }
 
 // TODO: refactor parsedUrl "up" so new URL doesn't have to be called so much
-// TODO: refactor fbcStorage "up" so browser.storage.local.get doesn't have to be called so much
-async function addDomainToFacebookContainer (url) {
-  const fbcStorage = await browser.storage.local.get();
+// TODO: refactor gacStorage "up" so browser.storage.local.get doesn't have to be called so much
+async function addDomainToAllegroContainer (url) {
+  const gacStorage = await browser.storage.local.get();
   const rootDomain = getRootDomain(url);
-  fbcStorage.domainsAddedToFacebookContainer.push(rootDomain);
-  await browser.storage.local.set({"domainsAddedToFacebookContainer": fbcStorage.domainsAddedToFacebookContainer});
+  gacStorage.domainsAddedToAllegroContainer.push(rootDomain);
+  await browser.storage.local.set({ "domainsAddedToAllegroContainer": gacStorage.domainsAddedToAllegroContainer});
 }
 
-async function removeDomainFromFacebookContainer (domain) {
-  const fbcStorage = await browser.storage.local.get();
-  const domainIndex = fbcStorage.domainsAddedToFacebookContainer.indexOf(domain);
-  fbcStorage.domainsAddedToFacebookContainer.splice(domainIndex, 1);
-  await browser.storage.local.set({"domainsAddedToFacebookContainer": fbcStorage.domainsAddedToFacebookContainer});
+async function removeDomainFromAllegroContainer (domain) {
+  const gacStorage = await browser.storage.local.get();
+  const domainIndex = gacStorage.domainsAddedToAllegroContainer.indexOf(domain);
+  gacStorage.domainsAddedToAllegroContainer.splice(domainIndex, 1);
+  await browser.storage.local.set({ "domainsAddedToAllegroContainer": gacStorage.domainsAddedToAllegroContainer});
 }
 
-async function isAddedToFacebookContainer (url) {
-  const fbcStorage = await browser.storage.local.get();
+async function isAddedToAllegroContainer (url) {
+  const gacStorage = await browser.storage.local.get();
   const rootDomain = getRootDomain(url);
-  if (fbcStorage.domainsAddedToFacebookContainer.includes(rootDomain)) {
+  if (gacStorage.domainsAddedToAllegroContainer.includes(rootDomain)) {
     return true;
   }
   return false;
@@ -403,16 +387,16 @@ async function shouldContainInto (url, tab) {
     return false;
   }
 
-  const hasBeenAddedToFacebookContainer = await isAddedToFacebookContainer(url);
+  const hasBeenAddedToAllegroContainer = await isAddedToAllegroContainer(url);
 
-  if (isFacebookURL(url) || hasBeenAddedToFacebookContainer) {
-    if (tab.cookieStoreId !== facebookCookieStoreId) {
-      // Facebook-URL outside of Facebook Container Tab
-      // Should contain into Facebook Container
-      return facebookCookieStoreId;
+  if (isAllegroURL(url) || hasBeenAddedToAllegroContainer) {
+    if (tab.cookieStoreId !== allegroCookieStoreId) {
+      // Allegro-URL outside of Allegro Container Tab
+      // Should contain into Allegro Container
+      return allegroCookieStoreId;
     }
-  } else if (tab.cookieStoreId === facebookCookieStoreId) {
-    // Non-Facebook-URL inside Facebook Container Tab
+  } else if (tab.cookieStoreId === allegroCookieStoreId) {
+    // Non-Allegro-URL inside Allegro Container Tab
     // Should contain into Default Container
     return "firefox-default";
   }
@@ -483,48 +467,20 @@ function tabUpdateListener (tabId, changeInfo, tab) {
   updateBrowserActionIcon(tab);
 }
 
-/*
-async function areAllStringsTranslated () {
-  const browserUILanguage = browser.i18n.getUILanguage();
-  if (browserUILanguage && browserUILanguage.startsWith("en")) {
-    return true;
-  }
-  const enMessagesPath = browser.extension.getURL("_locales/en/messages.json");
-  const resp = await fetch(enMessagesPath);
-  const enMessages = await resp.json();
-
-  // TODO: Check Pontoon for available translations instead of checking
-  // messages files
-  for (const key of Object.keys(enMessages)){
-    // TODO: this doesn't check if the add-on messages are translated into
-    // any other browser.i18n.getAcceptedLanguages() options ... but then,
-    // I don't think browser.i18n let's us get messages in anything but the
-    // primary language anyway? Does browser.i18n.getMessage automatically
-    // check for secondary languages?
-    const enMessage = enMessages[key].message;
-    const translatedMessage = browser.i18n.getMessage(key);
-    if (translatedMessage == enMessage) {
-      return false;
-    }
-  }
-  return true;
-}
-*/
-
 async function updateBrowserActionIcon (tab) {
 
   browser.browserAction.setBadgeText({text: ""});
 
   const url = tab.url;
-  const hasBeenAddedToFacebookContainer = await isAddedToFacebookContainer(url);
+  const hasBeenAddedToAllegroContainer = await isAddedToAllegroContainer(url);
   const aboutPageURLCheck = url.startsWith("about:");
 
-  if (isFacebookURL(url)) {
+  if (isAllegroURL(url)) {
     // TODO: change panel logic from browser.storage to browser.runtime.onMessage
     // so the panel.js can "ask" background.js which panel it should show
-    browser.storage.local.set({"CURRENT_PANEL": "on-facebook"});
+    browser.storage.local.set({"CURRENT_PANEL": "on-allegro"});
     browser.browserAction.setPopup({tabId: tab.id, popup: "./panel.html"});
-  } else if (hasBeenAddedToFacebookContainer) {
+  } else if (hasBeenAddedToAllegroContainer) {
     browser.storage.local.set({"CURRENT_PANEL": "in-fbc"});
   } else if (aboutPageURLCheck) {
     // Sets CURRENT_PANEL if current URL is an internal about: page
@@ -541,13 +497,13 @@ async function updateBrowserActionIcon (tab) {
   }
 }
 
-async function containFacebook (request) {
+async function containAllegro (request) {
   if (tabsWaitingToLoad[request.tabId]) {
     // Cleanup just to make sure we don't get a race-condition with startup reopening
     delete tabsWaitingToLoad[request.tabId];
   }
 
-  // Listen to requests and open Facebook into its Container,
+  // Listen to requests and open Allegro into its Container,
   // open other sites into the default tab context
   if (request.tabId === -1) {
     // Request doesn't belong to a tab
@@ -568,7 +524,7 @@ async function containFacebook (request) {
 
 // Lots of this is borrowed from old blok code:
 // https://github.com/mozilla/blok/blob/master/src/js/background.js
-async function blockFacebookSubResources (requestDetails) {
+async function blockAllegroSubResources (requestDetails) {
   if (requestDetails.type === "main_frame") {
     tabStates[requestDetails.tabId] = { trackersDetected: false };
     return {};
@@ -578,42 +534,42 @@ async function blockFacebookSubResources (requestDetails) {
     return {};
   }
 
-  const urlIsFacebook = isFacebookURL(requestDetails.url);
-  // If this request isn't going to Facebook, let's return {} ASAP
-  if (!urlIsFacebook) {
+  const urlIsAllegro = isAllegroURL(requestDetails.url);
+  // If this request isn't going to Allegro, let's return {} ASAP
+  if (!urlIsAllegro) {
     return {};
   }
 
-  const originUrlIsFacebook = isFacebookURL(requestDetails.originUrl);
+  const originUrlIsAllegro = isAllegroURL(requestDetails.originUrl);
 
-  if (originUrlIsFacebook) {
-    const message = {msg: "facebook-domain"};
+  if (originUrlIsAllegro) {
+    const message = {msg: "allegro-domain"};
     // Send the message to the content_script
     browser.tabs.sendMessage(requestDetails.tabId, message);
     return {};
   }
 
-  const frameAncestorUrlIsFacebookApps = topFrameUrlIsFacebookApps(requestDetails.frameAncestors);
+  const frameAncestorUrlIsAllegroApps = topFrameUrlIsAllegroApps(requestDetails.frameAncestors);
 
-  if (frameAncestorUrlIsFacebookApps) {
-    const message = {msg: "facebook-domain"};
+  if (frameAncestorUrlIsAllegroApps) {
+    const message = {msg: "allegro-domain"};
     // Send the message to the content_script
     browser.tabs.sendMessage(requestDetails.tabId, message);
     return {};
   }
 
-  const hasBeenAddedToFacebookContainer = await isAddedToFacebookContainer(requestDetails.originUrl);
+  const hasBeenAddedToAllegroContainer = await isAddedToAllegroContainer(requestDetails.originUrl);
 
-  if ( urlIsFacebook && !originUrlIsFacebook ) {
-    if (!hasBeenAddedToFacebookContainer ) {
-      const message = {msg: "blocked-facebook-subresources"};
+  if ( urlIsAllegro && !originUrlIsAllegro ) {
+    if (!hasBeenAddedToAllegroContainer ) {
+      const message = {msg: "blocked-allegro-subresources"};
       // Send the message to the content_script
       browser.tabs.sendMessage(requestDetails.tabId, message);
 
       tabStates[requestDetails.tabId] = { trackersDetected: true };
       return {cancel: true};
     } else {
-      const message = {msg: "allowed-facebook-subresources"};
+      const message = {msg: "allowed-allegro-subresources"};
       // Send the message to the content_script
       browser.tabs.sendMessage(requestDetails.tabId, message);
       return {};
@@ -635,10 +591,10 @@ function setupWebRequestListeners() {
   },{urls: ["<all_urls>"], types: ["main_frame"]});
 
   // Add the main_frame request listener
-  browser.webRequest.onBeforeRequest.addListener(containFacebook, {urls: ["<all_urls>"], types: ["main_frame"]}, ["blocking"]);
+  browser.webRequest.onBeforeRequest.addListener(containAllegro, {urls: ["<all_urls>"], types: ["main_frame"]}, ["blocking"]);
 
   // Add the sub-resource request listener
-  browser.webRequest.onBeforeRequest.addListener(blockFacebookSubResources, {urls: ["<all_urls>"]}, ["blocking"]);
+  browser.webRequest.onBeforeRequest.addListener(blockAllegroSubResources, {urls: ["<all_urls>"]}, ["blocking"]);
 }
 
 function setupWindowsAndTabsListeners() {
@@ -671,20 +627,20 @@ async function checkIfTrackersAreDetected(sender) {
     console.error(error);
     return;
   }
-  clearFacebookCookies();
-  generateFacebookHostREs();
+  clearAllegroCookies();
+  generateAllegroHostREs();
   setupWebRequestListeners();
   setupWindowsAndTabsListeners();
 
   async function messageHandler(request, sender) {
     switch (request.message) {
     case "what-sites-are-added":
-      return browser.storage.local.get().then(fbcStorage => fbcStorage.domainsAddedToFacebookContainer);
+        return browser.storage.local.get().then(gacStorage => gacStorage.domainsAddedToAllegroContainer);
     case "remove-domain-from-list":
-      removeDomainFromFacebookContainer(request.removeDomain).then( results => results );
+      removeDomainFromAllegroContainer(request.removeDomain).then( results => results );
       break;
     case "add-domain-to-list":
-      addDomainToFacebookContainer(sender.url).then( results => results);
+      addDomainToAllegroContainer(sender.url).then( results => results);
       break;
     case "get-root-domain":
       return getRootDomain(request.url);

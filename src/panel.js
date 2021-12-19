@@ -26,10 +26,10 @@ const setUpPanel = (panelId) => {
 };
 
 
-// adds "Facebook Container" to top of all panels
+// adds "Allegro Container" to top of all panels
 const addHeader = (wrapper) => {
   const el = document.createElement("h1");
-  el["id"] = "facebookContainer";
+  el["id"] = "allegroContainer";
   setClassAndAppend(wrapper, el);
   return el;
 };
@@ -81,9 +81,9 @@ const addDiv = (wrapper, className) => {
 
 
 // creates grey Facebook text. Grey fence icon is set in CSS.
-const addFacebookAndIcon = async () => {
+const addAllegroAndIcon = async () => {
   const el = document.createElement("p");
-  el.innerText = "Facebook";
+  el.innerText = "Allegro";
   const browserInfo = await browser.runtime.getBrowserInfo();
   if (parseInt(browserInfo.version) < 67) {
     el.classList.add("Facebook-blue-text");
@@ -130,7 +130,7 @@ const getActiveRootDomainFromBackground = async() => {
 };
 
 const isSiteInContainer = async(panelId) => {
-  if (panelId === "on-facebook") {
+  if (panelId === "on-allegro") {
     // Site is on default FBC domain. Show the "remove site" button, in a disabled state.
     return true;
   }
@@ -234,23 +234,6 @@ const addDeleteSiteListeners = () => {
         removeDomain: e.dataset.domain
       });
     });
-  });
-};
-
-const addLearnMoreLink = (fragment) => {
-  const link = document.createElement("a");
-  link["id"] = "learn-more";
-  link.classList.add("open-sumo");
-  link["rel"] = "noopener noreferrer";
-  link["href"] = "https://support.mozilla.org/kb/facebook-container-prevent-facebook-tracking";
-  // need Facebook Container SUMO url. // need UTM params? // open in new or same window?
-  setClassAndAppend(fragment, link);
-  link.addEventListener("click", (e) => {
-    e.preventDefault();
-    browser.tabs.create({
-      url: "https://support.mozilla.org/kb/facebook-container-prevent-facebook-tracking"
-    });
-    window.close();
   });
 };
 
@@ -361,8 +344,8 @@ const buildPanel = async(panelId) => {
   const contentWrapper = addDiv(fragment, "main-content-wrapper");
   addSubhead(contentWrapper, panelId);
 
-  if (panelId === "on-facebook") {
-    let el = await addFacebookAndIcon(contentWrapper);
+  if (panelId === "on-allegro") {
+    let el = await addAllegroAndIcon(contentWrapper);
     contentWrapper.appendChild(el);
   }
 
@@ -374,12 +357,11 @@ const buildPanel = async(panelId) => {
     addParagraph(contentWrapper, `${panelId}-p1`);
   }
 
-  if (panelId === "on-facebook") {
+  if (panelId === "on-allegro") {
     addParagraph(contentWrapper, `${panelId}-p2`);
   }
 
   if (["trackers-detected", "in-fbc"].includes(panelId)) {
-    addLearnMoreLink(contentWrapper);
     const imgDiv = addDiv(contentWrapper, panelId);
     imgDiv.classList.add("img");
   }
@@ -387,7 +369,6 @@ const buildPanel = async(panelId) => {
   await addLearnHowFBCWorksButton(fragment);
 
   if (panelId === "no-trackers") {
-    addLearnMoreLink(contentWrapper);
     await addCustomSiteButton(fragment, panelId);
   }
 
@@ -432,7 +413,7 @@ const buildOnboardingPanel = async (panelId) => {
   }
 
   if (panelId === 2) {
-    let el = await addFacebookAndIcon();
+    let el = await addAllegroAndIcon();
     h2.parentNode.insertBefore(el, h2.nextSibling);
     setNavButtons(fragment, "btn-back", "btn-next", stringId);
   }
@@ -473,9 +454,7 @@ const addHeaderWithBackArrow = (fragment) => {
 
 
 const defaultAllowedSites = [
-  "instagram.com",
-  "facebook.com",
-  "messenger.com",
+  "allegro.pl",
 ];
 
 
@@ -558,9 +537,9 @@ const buildAllowedSitesPanel = async(panelId) => {
 
 const addSiteToContainer = async () => {
   const activeRootDomain = await getActiveRootDomainFromBackground();
-  const fbcStorage = await browser.storage.local.get();
-  fbcStorage.domainsAddedToFacebookContainer.push(activeRootDomain);
-  await browser.storage.local.set({"domainsAddedToFacebookContainer": fbcStorage.domainsAddedToFacebookContainer});
+  const gacStorage = await browser.storage.local.get();
+  gacStorage.domainsAddedToAllegroContainer.push(activeRootDomain);
+  await browser.storage.local.set({ "domainsAddedToAllegroContainer": gacStorage.domainsAddedToAllegroContainer});
   browser.tabs.reload();
   window.close();
 };

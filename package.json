@@ -1,7 +1,7 @@
 {
-  "name": "contain-facebook",
-  "version": "2.3.1",
-  "description": "Facebook Container isolates your Facebook activity from the rest of your web activity in order to prevent Facebook from tracking you outside of the Facebook website via third party cookies. ",
+  "name": "contain-allegro",
+  "version": "1.0.0",
+  "description": "Allegro Container isolates your Allegro activity from the rest of your web activity in order to prevent Allegro from tracking you outside of the Allegro website via third party cookies. ",
   "main": "background.js",
   "scripts": {
     "test": "eslint src test && npm run coverage && npm run test-functional",
@@ -13,19 +13,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:mozilla/contain-facebook.git"
+    "url": "git@github.com:Capad/contain-allegro.git"
   },
   "keywords": [
     "addon",
     "firefox",
-    "mozilla"
+    "capad",
+    "allegro"
   ],
   "author": "Luke Crouch",
   "license": "MPL-2.0",
   "bugs": {
-    "url": "https://github.com/mozilla/contain-facebook/issues"
+    "url": "https://github.com/Capad/contain-allegro/issues"
   },
-  "homepage": "https://github.com/mozilla/contain-facebook#readme",
+  "homepage": "https://github.com/Capad/contain-facebook#readme",
   "devDependencies": {
     "chai": "^4.1.2",
     "cross-env": "^5.2.0",

@@ -1,26 +1,21 @@
 # CONTRIBUTING
 
-Everyone is welcome to contribute to Facebook Containers. Reach out to team members if you have questions:
-
-- IRC: #containers on irc.mozilla.org
-- Email: containers@mozilla.com
+Everyone is welcome to contribute to Allegro Containers.
 
 ## Filing bugs
 
-If you find a bug with Facebook Container, please file a issue.
+If you find a bug with Allegro Container, please file a issue.
 
-Check first if the bug might already exist: https://github.com/mozilla/contain-facebook/issues
+1. Click "Copy raw data to clipboard" and paste into the bug. Alternatively copy the following sections into the issue:
 
-[Open an issue](https://github.com/mozilla/contain-facebook/issues/new)
+- Application Basics
+- Nightly Features (if you are in nightly)
+- Extensions
+- Experimental Features
 
-1. Visit about:support
-2. Click "Copy raw data to clipboard" and paste into the bug. Alternatively copy the following sections into the issue:
-  - Application Basics
-  - Nightly Features (if you are in nightly)
-  - Extensions
-  - Experimental Features
-3. Include clear steps to reproduce the issue you have experienced.
-4. Include screenshots if possible.
+2. Include clear steps to reproduce the issue you have experienced.
+3. Include screenshots if possible.
+
 *****
 
 ## Sending Pull Requests
@@ -34,7 +29,3 @@ Patches should be submitted as pull requests. When submitting patches as PRs:
 - Please do not include merge commits in pull requests; include only commits with the new relevant code.
 
 See the main [README](./README.md) for information on prerequisites, installing, running and testing.
-
-
-
-

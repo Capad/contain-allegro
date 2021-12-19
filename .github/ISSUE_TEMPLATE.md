@@ -6,7 +6,7 @@
   - You are NOT using Firefox in a Private Window
   - You can see a grayed out but ticked Checkbox with the description "Enable Container Tabs" in the Firefox Preferences/Options under "Tabs"
 -->
-- Facebook Container Version:
+- Allegro Container Version:
 - Operating System + Version:
 - Firefox Version:
 - Other installed Add-ons + Version + Enabled/Disabled-Status:
